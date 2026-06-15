@@ -25,6 +25,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Wait until 08:10 Asia/Taipei
+        if: github.event_name == 'schedule'
         shell: bash
         run: |
           now=$(TZ=Asia/Taipei date +%s)
