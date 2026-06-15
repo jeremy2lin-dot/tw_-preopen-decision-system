@@ -1,0 +1,44 @@
+name: Taiwan Preopen Decision Report
+
+on:
+  schedule:
+    # 07:55 Asia/Taipei = 23:55 UTC on the previous day.
+    # Runs before Taiwan weekdays: Mon-Fri Asia/Taipei = Sun-Thu UTC.
+    - cron: "55 23 * * 0-4"
+  workflow_dispatch:
+
+jobs:
+  send-preopen-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Wait until 08:10 Asia/Taipei
+        shell: bash
+        run: |
+          now=$(TZ=Asia/Taipei date +%s)
+          target=$(TZ=Asia/Taipei date -d "today 08:10" +%s)
+          if [ "$now" -lt "$target" ]; then
+            sleep_seconds=$((target - now))
+            echo "Waiting ${sleep_seconds}s until 08:10 Asia/Taipei."
+            sleep "$sleep_seconds"
+          else
+            echo "Already past 08:10 Asia/Taipei; sending immediately."
+          fi
+
+      - name: Send preopen report to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python tw_preopen_decision_system.py

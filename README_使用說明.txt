@@ -41,6 +41,19 @@ python D:\Py\tw_preopen_decision_system\tw_preopen_decision_system.py
 - 程式：D:\Py\tw_preopen_decision_system\run_tw_preopen_system.bat
 - 起始位置：D:\Py\tw_preopen_decision_system
 
+GitHub Actions
+--------------
+也可以由 GitHub Actions 自動發送：
+- Workflow：.github/workflows/preopen-report.yml
+- 啟動時間：台北時間週一到週五 07:55
+- 發送時間：workflow 內等待到台北時間 08:10 後發送
+
+GitHub repository secrets 需要設定：
+- TELEGRAM_BOT_TOKEN
+- TELEGRAM_CHAT_ID
+
+注意：GitHub Actions schedule 可能延遲；此 workflow 先提早啟動並等待到 08:10，以降低整點排隊造成的延遲。
+
 注意事項
 --------
 - last_sent_state_preopen.json 用來避免同一天重複發送，不應提交。
