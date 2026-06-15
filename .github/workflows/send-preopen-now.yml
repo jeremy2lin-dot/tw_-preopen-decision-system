@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ".github/workflows/send-preopen-now.yml"
+      - "tw_preopen_decision_system.py"
 
 jobs:
   send-preopen-report:

@@ -120,11 +120,14 @@ def _to_float(text: str) -> float:
 
 def fetch_asia_from_stooq(symbol: str, label: str) -> dict:
     url = f"https://stooq.com/q/l/?s={symbol}&f=sd2t2ohlcv&h&e=csv"
-    r = requests.get(url, headers=USER_AGENT, timeout=20)
-    r.raise_for_status()
+    try:
+        r = requests.get(url, headers=USER_AGENT, timeout=20)
+        r.raise_for_status()
+    except requests.RequestException:
+        return fetch_asia_from_yfinance(label)
     lines = [x.strip() for x in r.text.strip().splitlines() if x.strip()]
     if len(lines) < 2:
-        raise RuntimeError(f"{label} stooq 無資料")
+        return fetch_asia_from_yfinance(label)
 
     header = lines[0].split(",")
     row = lines[1].split(",")
@@ -149,6 +152,37 @@ def fetch_asia_from_stooq(symbol: str, label: str) -> dict:
 
     return {
         "source": "stooq",
+        "date": latest_date,
+        "close": round(close_price, 2),
+        "prev_close": round(prev_close, 2),
+        "high": round(high_price, 2),
+        "low": round(low_price, 2),
+        "change": round(change, 2),
+        "change_pct": round(change_pct, 2),
+        "amplitude": round(amplitude, 2),
+        "amplitude_pct": round(amplitude_pct, 2),
+    }
+
+
+def fetch_asia_from_yfinance(label: str) -> dict:
+    yf_symbol = "^N225" if "日經" in label else "^KS11"
+    ticker = yf.Ticker(yf_symbol)
+    hist = ticker.history(period="10d", auto_adjust=False)
+
+    latest, prev, latest_date = get_latest_two_rows(hist)
+
+    close_price = float(latest["Close"])
+    prev_close = float(prev["Close"])
+    high_price = float(latest["High"])
+    low_price = float(latest["Low"])
+
+    change = close_price - prev_close
+    change_pct = (change / prev_close) * 100 if prev_close else 0.0
+    amplitude = high_price - low_price
+    amplitude_pct = (amplitude / prev_close) * 100 if prev_close else 0.0
+
+    return {
+        "source": "yfinance",
         "date": latest_date,
         "close": round(close_price, 2),
         "prev_close": round(prev_close, 2),
