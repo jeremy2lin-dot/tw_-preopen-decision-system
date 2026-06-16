@@ -1,10 +1,6 @@
 name: Taiwan Preopen Decision Report
 
 on:
-  schedule:
-    # 07:55 Asia/Taipei = 23:55 UTC on the previous day.
-    # Runs before Taiwan weekdays: Mon-Fri Asia/Taipei = Sun-Thu UTC.
-    - cron: "55 23 * * 0-4"
   workflow_dispatch:
 
 jobs:
@@ -23,20 +19,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
-
-      - name: Wait until 08:10 Asia/Taipei
-        if: github.event_name == 'schedule'
-        shell: bash
-        run: |
-          now=$(TZ=Asia/Taipei date +%s)
-          target=$(TZ=Asia/Taipei date -d "today 08:10" +%s)
-          if [ "$now" -lt "$target" ]; then
-            sleep_seconds=$((target - now))
-            echo "Waiting ${sleep_seconds}s until 08:10 Asia/Taipei."
-            sleep "$sleep_seconds"
-          else
-            echo "Already past 08:10 Asia/Taipei; sending immediately."
-          fi
 
       - name: Send preopen report to Telegram
         env:
